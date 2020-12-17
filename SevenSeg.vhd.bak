@@ -1,0 +1,51 @@
+-- 7 seg display
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity Sevenseg is 
+    port (
+            -- Input of 4 bit binary
+            bin: in std_logic_vector(3 downto 0);
+
+            -- Output of LED segment lights
+            A: out std_logic;
+            B: out std_logic;
+            C: out std_logic;
+            D: out std_logic;
+            E: out std_logic;
+            F: out std_logic;
+            G: out std_logic
+
+        );
+
+    end Sevenseg;
+
+architecture arch of sevenseg is
+
+    signal segs : std_logic_vector(6 downto 0);
+     
+    begin 
+    segs <= "1111110" when (bin = "0000") else
+            "0110000" when (bin = "0001") else
+            "1101101" when (bin = "0010") else
+            "1111001" when (bin = "0011") else
+            "0110011" when (bin = "0100") else
+            "1011011" when (bin = "0101") else
+            "1011111" when (bin = "0110") else
+            "1110000" when (bin = "0111") else
+            "1111111" when (bin = "1000") else
+            "1110011" when (bin = "1001"); 
+
+    A <= segs(6);
+    B <= segs(5);
+    C <= segs(4); 
+    D <= segs(3); 
+    E <= segs(2);
+    F <= segs(1); 
+    G <= segs(0);
+    end;
+    
+    
+    

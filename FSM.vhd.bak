@@ -1,0 +1,68 @@
+library ieee;
+use ieee.std_logic_unsigned.all;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+
+
+entity FSH is
+    -- inputs and outputs
+     port( 
+        time_btn, alarm_btn, ring, snooze, clk, reset_l: in std_logic;
+        in_time, in_alarm, in_set_time, in_set_alarm: out std_logic
+ 
+     );
+ end FSH;
+
+architecture arch of statetype is
+
+type statetype is (s_state1, s_state2, s_state3, s_state4);
+signal cur_state: statetype := s_state1; --default state
+signal alarm: statetype := s_state2; --alarm
+signal set_time: statetype := s_state3; --set time
+signal set_alarm: statetype := s_state4; -- set alarm
+
+begin
+nextstate : process (clk, reset_l)
+    begin 
+
+    if (reset_l = '0') then
+        cur_state <= cur_state;
+        cur_state <= alarm;
+        cur_state <= set_type;
+        cur_state <= s_alarml;
+
+        elsif (cur_state = alarm and ring = '1') then
+        cur_state <= alarm;
+        
+        
+        elsif (rising_edge(CLK)) then
+        
+            case (cur_state) is
+                when cur_state => 
+                    if (time_btn = '1') then
+                        cur_state <= set_time;
+                    elsif (alarm_btn = '1') then
+                        cur_state <= set_alarm;
+                    elsif (ring = '1') then
+                        cur_state <= alarm;
+            end if;
+       
+        
+            case (set_alarm) is
+                when set_alarm =>
+                    if (time_btn = '0') then
+                    alarm <= cur_state;
+            end if;
+        
+            case (set_time) is
+                when set_time =>
+                    if (time_btn = '0') then
+                     set_time <= time_btn;
+        end if;
+
+    when others => cur_state;
+end if;
+end process;
+end;
+    

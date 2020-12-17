@@ -1,0 +1,159 @@
+library ieee;
+use ieee.std_logic_unsigned.all;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+
+entity AlarmClock is
+    port (
+    -- inputs
+        time_btn: in std_logic;
+        alarm_btn: in std_logic;
+        inc_hour: in std_logic (3 downto 0);
+        inc_minute: in std_logic (3 downto 0);
+        snooze: in std_logic;
+        reset: in std_logic;
+        clk: in std_logic; 
+
+    -- outputs
+        A0: out std_logic;
+        B0: out std_logic;
+        C0: out std_logic;
+        D0: out std_logic;
+        E0: out std_logic;
+        F0: out std_logic;
+        G0: out std_logic;
+
+        A1: out std_logic;
+        B1: out std_logic;
+        C1: out std_logic;
+        D1: out std_logic;
+        E1: out std_logic;
+        F1: out std_logic;
+        G1: out std_logic;
+
+        LED: out std_logic
+    );
+    
+    end AlarmClock;
+
+
+architecture arch of AlarmClock is
+    signal cur_time: std_logic (7 downto 0);
+    signal alarm_time: std_logic (7 downto 0);
+
+
+    component ClockDivider is 
+    port (
+        CLK: in std_logic;
+        SLOW_CLK: out std_logic
+    );
+    
+    end component;
+    
+    component FSM is
+        -- inputs and outputs
+         port( 
+
+             time_btn: in std_logic;
+             alarm_btn: in std_logic; 
+             ring: in std_logic;
+             snooze: in std_logic;
+             clk: in std_logic;
+             reset_l: in std_logic;
+            
+            in_time:  out std_logic;
+            in_alarm:  out std_logic;
+            in_set_time:  out std_logic;
+            in_set_alarm: out std_logic
+     
+        );
+
+    end component;
+
+    component TimeCounter is
+        -- inputs and outputs
+        port( 
+            cur_time: in std_logic_vector (7 downto 0);
+            next_time: out std_logic_vector (7 downto 0)
+     
+        );
+     end component;
+
+    component Sevenseg is 
+    port (
+            -- Input of 4 bit binary
+           
+			   bin: in std_logic_vector(3 downto 0);
+
+            -- Output of LED segment lights
+				
+            A: out std_logic;
+            B: out std_logic;
+            C: out std_logic;
+            D: out std_logic;
+            E: out std_logic;
+            F: out std_logic;
+            G: out std_logic
+
+        );
+
+    end component;
+
+
+    begin
+    settimein : process (SLOW_CLK)
+    begin 
+    if (rising_edge(SLOW_CLK)) then 
+        if (in_time = '1') then 
+            cur_time <= cur_time + 1;
+            mins <= cur_time (3 downto 0);
+            hours <= cur_time (7 downto 4);
+        end if;
+            
+        if (in_set_time = '1') then
+                if (inc_min = '1') then
+                    cur_time(3 downto 0) <= cur_time(3 downto 0) + 1;
+                    mins <= cur_time(3 downto 0);
+                end if;
+
+                if (inc_hour = '1') then
+                    cur_time (7 downto 4) <= cur_time (7 downto 4) + 1;
+                    hours <= cur_time (7 downto 4);
+                end if;
+        end if;
+    end if;
+    end process;
+
+    setalarmin: process (SLOW_CLK)
+    begin 
+        if (rising_edge(SLOW_CLK)) then
+            if (set_alarm = '1') then
+                if (inc_hour = '1') then
+                    alarm_time(7 downto 4) <= cur_time (7 downto 4) + 1;
+                    hours <= cur_time(7 downto 4);
+                end if;
+                if (inc_hour = '1') then 
+                    alarm_time (3 downto 0) <= cur_time (3 downto 0) + 1;
+                    mins <= cur_time(3 downto 0);
+                end if;
+            end if;
+        end if;
+    end process;
+    
+    
+ring <= '1' when (cur_time = alarm_time) else '0';
+
+
+
+
+
+uSLOWCLOCK : ClockDivider PORT MAP (CLK => CLK, SLOW_CLK => SLOW_CLK);
+uCurrentTime : TimeCounter PORT MAP (cur_time => cur_time, next_time => inc_time);
+uFSM : FSM PORT MAP (time_btn => time_btn, alarm_btn => alarm_btn, snooze => snooze, reset_l => reset, clk => SLOW_CLK,
+    in_time => inc_time, in_set_time => inc_time, in_set_alarm => inc_time, in_alarm => inc_time);
+USevensegHours : Sevenseg  PORT MAP (bin => mins,
+    A => A0, B => B0, C => C0, D => D0, E => E0, F => F0, G => G0);
+USevensegMins : Sevenseg PORT MAP (bin => hours, 
+    A => A1, B => B1, C => C1, D => D1, E => E1, F => F1, G => G1);
+end;

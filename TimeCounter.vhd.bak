@@ -1,0 +1,83 @@
+library ieee;
+use ieee.std_logic_unsigned.all;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity TimeCounter is
+   -- inputs and outputs
+    port( 
+        cur_time: in std_logic_vector (7 downto 0);
+        CLK: in std_logic;
+        
+        next_time: out std_logic_vector (7 downto 0)
+
+    );
+end TimeCounter;
+
+
+
+
+architecture arch of TimeCounter is
+    signal cur_min:   cur_time std_logic_vector (3 downto 0);
+    signal cur_hour:  cur_time std_logic_vector (7 downto 4);
+    signal next_min:  next_time std_logic_vector (3 downto 0);
+    signal next_hour: next_time std_logic_vector (7 downto 4);
+
+    component ClockDivider is 
+    port (
+        CLK: in std_logic;
+        SLOW_CLK: out std_logic
+    );
+    
+    end component;
+
+
+    component Sevenseg is 
+    port (
+        -- Input of 4 bit binary
+           
+			bin: in std_logic_vector(3 downto 0);
+
+        -- Output of LED segment lights
+				
+            A: out std_logic;
+            B: out std_logic;
+            C: out std_logic;
+            D: out std_logic;
+            E: out std_logic;
+            F: out std_logic;
+            G: out std_logic
+
+        );
+
+    end component;
+
+begin
+
+Divider: process (SLOW_CLK)
+begin
+    if (rising_edge(SLOW_CLK)) then
+
+        next_min <= current_min + 1;
+
+        if (cur_min = ("1001")) then
+            next_min <= "0000";
+            next_hour <= next_hour + 1;
+
+                if (cur_hour = ("0101")) then
+                    next_hour <= "0000";
+
+                    
+                end if;
+        end if;
+    end if;
+end process;
+
+
+uSLOWCLOCK : ClockDivider PORT MAP (CLK => CLK, SLOW_CLK => SLOW_CLK);
+uSevenSigMin : SevenSig PORT MAP (CLK => SLOW_CLK, bin => next_time(3 downto 0));
+uSevenSigHour: SevenSig PORT MAP (CLK => SLOW_CLK, bin => next_time(7 downto 4));
+
+
+end;
+
